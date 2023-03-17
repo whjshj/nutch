@@ -867,7 +867,7 @@ class WarcRecordWriter extends RecordWriter<Text, WarcCapture> {
        * records.
        * 
        * The modified date of the CrawlDatum is the date of the last successful
-       * fetch with content (status 200). It is uses for the
+       * fetch with content (status 200). It is used for the
        * WARC-Refers-To-Date.
        */
       byte[] responseHeaderBytes = responseHeaders
