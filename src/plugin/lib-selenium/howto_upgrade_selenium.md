@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <!--
  Licensed to the Apache Software Foundation (ASF) under one or more
  contributor license agreements.  See the NOTICE file distributed with
@@ -15,22 +14,19 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project name="any23" default="jar-core">
 
-  <import file="../build-plugin.xml"/>
+1. Upgrade various driver versions dependency in src/plugin/lib-selenium/ivy.xml
 
-  <!-- Deploy Unit test dependencies -->
-  <target name="deps-test">
-    <ant target="deploy" inheritall="false" dir="../nutch-extensionpoints"/>
-    <ant target="deploy" inheritall="false" dir="../protocol-file"/>
-  </target>
+2. Upgrade Selenium's own dependencies in src/plugin/lib-selenium/plugin.xml
 
-  <!-- for junit test -->
-  <mkdir dir="${build.test}/data"/>
-  <copy todir="${build.test}/data">
-    <fileset dir="sample">
-      <include name="*.html"/>
-    </fileset>
-  </copy>
+   To get a list of dependencies and their versions execute:
+    $ ant -f ./build-ivy.xml
+    $ ls lib | sed 's/^/     <library name="/g' | sed 's/$/">\n       <export name="*"\/>\n     <\/library>/g'
 
-</project>
+   Note that all dependent libraries are exported for a "library" plugin ("lib-selenium").
+
+   N.B. The above Regex + Sed commands may not work if you are using MacOSX's Sed. In this instance you can instal GNU Sed as follows
+
+   $ brew install gnu-sed --with-default-names
+
+   You can then restart your terminal and the Regex + Sed command should work just fine!

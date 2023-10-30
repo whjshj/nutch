@@ -16,6 +16,7 @@
  */
 package org.apache.nutch.parse;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.nutch.crawl.CrawlDatum;
@@ -25,7 +26,6 @@ import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.NutchJob;
 import org.apache.nutch.util.NutchTool;
 import org.apache.nutch.util.StringUtil;
-import org.apache.nutch.util.TimingUtil;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -50,13 +50,12 @@ import org.apache.hadoop.io.WritableComparable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 /* Parse content in a segment. */
 public class ParseSegment extends NutchTool implements Tool {
@@ -228,12 +227,10 @@ public class ParseSegment extends NutchTool implements Tool {
       return;
     }
 
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    long start = System.currentTimeMillis();
-    if (LOG.isInfoEnabled()) {
-      LOG.info("ParseSegment: starting at {}", sdf.format(start));
-      LOG.info("ParseSegment: segment: {}", segment);
-    }
+    StopWatch stopWatch = new StopWatch();
+    stopWatch.start();
+    LOG.info("ParseSegment: starting");
+    LOG.info("ParseSegment: segment: {}", segment);
 
     Job job = NutchJob.getInstance(getConf());
     job.setJobName("parse " + segment);
@@ -263,9 +260,9 @@ public class ParseSegment extends NutchTool implements Tool {
       throw e;
     }
 
-    long end = System.currentTimeMillis();
-    LOG.info("ParseSegment: finished at " + sdf.format(end) + ", elapsed: "
-        + TimingUtil.elapsedTime(start, end));
+    stopWatch.stop();
+    LOG.info("ParseSegment: finished, elapsed: {} ms", stopWatch.getTime(
+        TimeUnit.MILLISECONDS));
   }
 
   public static void main(String[] args) throws Exception {
@@ -312,19 +309,10 @@ public class ParseSegment extends NutchTool implements Tool {
     Path segment = null;
     if(args.containsKey(Nutch.ARG_SEGMENTS)) {
       Object seg = args.get(Nutch.ARG_SEGMENTS);
-      if(seg instanceof Path) {
+      if (seg instanceof Path) {
         segment = (Path) seg;
-      }
-      else if(seg instanceof String){
+      } else if (seg instanceof String) {
         segment = new Path(seg.toString());
-      }
-      else if(seg instanceof ArrayList) {
-        String[] segmentsArray = (String[])seg;
-        segment = new Path(segmentsArray[0].toString());
-        	  
-        if(segmentsArray.length > 1){
-       	  LOG.warn("Only the first segment of segments array is used.");
-        }
       }
     }
     else {

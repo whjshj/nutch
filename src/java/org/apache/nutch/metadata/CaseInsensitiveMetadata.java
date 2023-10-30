@@ -14,11 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.nutch.metadata;
+
+import java.util.TreeMap;
 
 /**
- * This packages uses the <a href="https://any23.apache.org/">Apache Any23</a> library
- * for parsing and extracting structured data in RDF format from a
- * variety of Web documents. The supported formats can be found
- * at <a href="https://any23.apache.org/">Apache Any23</a>.
+ * A decorator to Metadata that adds for case-insensitive lookup of keys.
  */
-package org.apache.nutch.any23;
+public class CaseInsensitiveMetadata extends Metadata {
+
+  /**
+   * Constructs a new, empty metadata.
+   */
+  public CaseInsensitiveMetadata() {
+    metadata = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+  }
+
+}
