@@ -1964,8 +1964,38 @@ CAUTION: Set the parser.timeout to -1 or a bigger value than 30, when using this
 <property>
   <name>urlfilter.fast.file</name>
   <value>fast-urlfilter.txt</value>
-  <description>Name of file on CLASSPATH containing regular expressions
-  used by urlfilter-fast (FastURLFilter) plugin.</description>
+  <description>Name of file containing rules and regular expressions
+  used by urlfilter-fast (FastURLFilter) plugin. If the filename
+  includes a scheme (for example, hdfs://) it is loaded using the
+  Hadoop FileSystem implementation supporting that scheme. If the
+  filename does not contain a scheme, the file is loaded from
+  CLASSPATH. If indicated by file extension (.gz, .bzip2, .zst),
+  the file is decompressed while reading using Hadoop-provided
+  compression codecs.</description>
+</property>
+
+<property>
+  <name>urlfilter.fast.url.max.length</name>
+  <value>-1</value>
+  <description>Filters URLs based on their overall length.
+  The default value of -1 means that it is deactivated.
+  </description>
+</property>
+
+<property>
+  <name>urlfilter.fast.url.path.max.length</name>
+  <value>-1</value>
+  <description>Filters URLs based on the length of their path element.
+  The default value of -1 means that it is deactivated.
+  </description>
+</property>
+
+<property>
+  <name>urlfilter.fast.url.query.max.length</name>
+  <value>-1</value>
+  <description>Filters URLs based on the length of their query element.
+  The default value of -1 means that it is deactivated.
+  </description>
 </property>
 
 <property>
