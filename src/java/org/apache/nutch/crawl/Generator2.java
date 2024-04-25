@@ -404,9 +404,7 @@ public class Generator2 extends Configured implements Tool {
       try {
         sort = scfilters.generatorSortValue(key, value, sort);
       } catch (ScoringFilterException sfe) {
-        if (LOG.isWarnEnabled()) {
-          LOG.warn("Couldn't filter generatorSortValue for {}: {}", key, sfe);
-        }
+        LOG.warn("Couldn't filter generatorSortValue for {}: {}", key, sfe);
       }
 
       if (restrictStatus != null && !restrictStatus
@@ -1357,9 +1355,7 @@ public class Generator2 extends Configured implements Tool {
    */
   private List<Path> partitionSegments(FileSystem fs, Path segmentsDir,
       List<Path> inputDirs, int numLists) throws Exception {
-    if (LOG.isInfoEnabled()) {
-      LOG.info("Generator: Partitioning selected urls for politeness.");
-    }
+    LOG.info("Generator: Partitioning selected urls for politeness.");
 
     List<Path> generatedSegments = new ArrayList<Path>();
 
