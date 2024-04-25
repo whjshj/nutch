@@ -255,18 +255,21 @@ public class Generator2 extends Configured implements Tool {
       segnum = new IntWritable(0);
     }
 
+    @Override
     public void readFields(DataInput in) throws IOException {
       url.readFields(in);
       datum.readFields(in);
       segnum.readFields(in);
     }
 
+    @Override
     public void write(DataOutput out) throws IOException {
       url.write(out);
       datum.write(out);
       segnum.write(out);
     }
 
+    @Override
     public String toString() {
       return "url=" + url.toString() + ", datum=" + datum.toString()
           + ", segnum=" + segnum.toString();
@@ -362,6 +365,7 @@ public class Generator2 extends Configured implements Tool {
     }
 
     /** Select & invert subset due for fetch. */
+    @Override
     public void map(Text key, CrawlDatum value, Context context)
         throws IOException, InterruptedException {
       String urlString = key.toString();
@@ -681,6 +685,7 @@ public class Generator2 extends Configured implements Tool {
      * Limit the number of URLs per host/domain and assign segment number to
      * every record.
      */
+    @Override
     public void reduce(DomainScorePair key, Iterable<SelectorEntry> values,
         Context context) throws IOException, InterruptedException {
 
@@ -977,6 +982,7 @@ public class Generator2 extends Configured implements Tool {
 
     SegmenterKey outputKey = new SegmenterKey();
 
+    @Override
     public void map(FloatWritable key, SelectorEntry value, Context context)
         throws IOException, InterruptedException {
       outputKey.set(value.url, value.segnum);
@@ -1002,6 +1008,7 @@ public class Generator2 extends Configured implements Tool {
       mos = new MultipleOutputs<Text, SelectorEntry>(context);
     }
 
+    @Override
     public void reduce(SegmenterKey key, Iterable<SelectorEntry> values,
         Context context) throws IOException, InterruptedException {
       long count = 0;
@@ -1064,6 +1071,7 @@ public class Generator2 extends Configured implements Tool {
       partitioner.setDomainLimits(SelectorReducer.readLimitsFile(conf, acceptor));
     }
 
+    @Override
     public void map(Text key, SelectorEntry value, Context context)
         throws IOException, InterruptedException {
       out.write("sequenceFilesPartitions", key, value.datum,
@@ -1090,6 +1098,7 @@ public class Generator2 extends Configured implements Tool {
       super(Text.class);
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public int compare(WritableComparable a, WritableComparable b) {
       Text url1 = (Text) a;
@@ -1099,6 +1108,7 @@ public class Generator2 extends Configured implements Tool {
       return (hash1 < hash2 ? -1 : (hash1 == hash2 ? 0 : 1));
     }
 
+    @Override
     public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
       int hash1 = hash(b1, s1, l1);
       int hash2 = hash(b2, s2, l2);
@@ -1110,7 +1120,7 @@ public class Generator2 extends Configured implements Tool {
       // make later bytes more significant in hash code, so that sorting
       // by hashcode correlates less with by-host ordering.
       for (int i = length - 1; i >= 0; i--)
-        hash = (31 * hash) + (int) bytes[start + i];
+        hash = (31 * hash) + bytes[start + i];
       return hash;
     }
   }
@@ -1426,6 +1436,7 @@ public class Generator2 extends Configured implements Tool {
     System.exit(res);
   }
 
+  @Override
   public int run(String[] args) throws Exception {
     if (args.length < 2) {
       System.out.println(
