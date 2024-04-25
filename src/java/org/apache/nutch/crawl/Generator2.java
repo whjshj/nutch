@@ -342,6 +342,11 @@ public class Generator2 extends Configured implements Tool {
       filters = new URLFilters(conf);
       scfilters = new ScoringFilters(conf);
       filter = conf.getBoolean(GENERATOR_FILTER, true);
+      normalise = conf.getBoolean(GENERATOR_NORMALISE, true);
+      if (normalise) {
+        normalizers = new URLNormalizers(conf,
+            URLNormalizers.SCOPE_GENERATE_HOST_COUNT);
+      }
       genDelay = conf.getLong(GENERATOR_DELAY, 7L) * 3600L * 24L * 1000L;
       long time = conf.getLong(Nutch.GENERATE_TIME_KEY, 0L);
       if (time > 0)
