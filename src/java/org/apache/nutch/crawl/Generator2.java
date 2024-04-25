@@ -365,12 +365,13 @@ public class Generator2 extends Configured implements Tool {
         // If filtering is on don't generate URLs that don't pass
         // URLFilters
         try {
-          if (filters.filter(urlString) == null)
+          if (filters.filter(urlString) == null) {
+            context.getCounter("Generator", "URL_FILTERS_REJECTED").increment(1);
             return;
-        } catch (URLFilterException e) {
-          if (LOG.isWarnEnabled()) {
-            LOG.warn("Couldn't filter url {}: {}", key, e.getMessage());
           }
+        } catch (URLFilterException e) {
+          LOG.warn("Couldn't filter url {}: {}", key, e.getMessage());
+          context.getCounter("Generator", "URL_FILTER_EXCEPTION").increment(1);
         }
       }
 
