@@ -255,18 +255,21 @@ public class Generator2 extends Configured implements Tool {
       segnum = new IntWritable(0);
     }
 
+    @Override
     public void readFields(DataInput in) throws IOException {
       url.readFields(in);
       datum.readFields(in);
       segnum.readFields(in);
     }
 
+    @Override
     public void write(DataOutput out) throws IOException {
       url.write(out);
       datum.write(out);
       segnum.write(out);
     }
 
+    @Override
     public String toString() {
       return "url=" + url.toString() + ", datum=" + datum.toString()
           + ", segnum=" + segnum.toString();
@@ -342,6 +345,11 @@ public class Generator2 extends Configured implements Tool {
       filters = new URLFilters(conf);
       scfilters = new ScoringFilters(conf);
       filter = conf.getBoolean(GENERATOR_FILTER, true);
+      normalise = conf.getBoolean(GENERATOR_NORMALISE, true);
+      if (normalise) {
+        normalizers = new URLNormalizers(conf,
+            URLNormalizers.SCOPE_GENERATE_HOST_COUNT);
+      }
       genDelay = conf.getLong(GENERATOR_DELAY, 7L) * 3600L * 24L * 1000L;
       long time = conf.getLong(Nutch.GENERATE_TIME_KEY, 0L);
       if (time > 0)
@@ -357,6 +365,7 @@ public class Generator2 extends Configured implements Tool {
     }
 
     /** Select & invert subset due for fetch. */
+    @Override
     public void map(Text key, CrawlDatum value, Context context)
         throws IOException, InterruptedException {
       String urlString = key.toString();
@@ -365,12 +374,13 @@ public class Generator2 extends Configured implements Tool {
         // If filtering is on don't generate URLs that don't pass
         // URLFilters
         try {
-          if (filters.filter(urlString) == null)
+          if (filters.filter(urlString) == null) {
+            context.getCounter("Generator", "URL_FILTERS_REJECTED").increment(1);
             return;
-        } catch (URLFilterException e) {
-          if (LOG.isWarnEnabled()) {
-            LOG.warn("Couldn't filter url {}: {}", key, e.getMessage());
           }
+        } catch (URLFilterException e) {
+          LOG.warn("Couldn't filter url {}: {}", key, e.getMessage());
+          context.getCounter("Generator", "URL_FILTER_EXCEPTION").increment(1);
         }
       }
 
@@ -394,9 +404,7 @@ public class Generator2 extends Configured implements Tool {
       try {
         sort = scfilters.generatorSortValue(key, value, sort);
       } catch (ScoringFilterException sfe) {
-        if (LOG.isWarnEnabled()) {
-          LOG.warn("Couldn't filter generatorSortValue for {}: {}", key, sfe);
-        }
+        LOG.warn("Couldn't filter generatorSortValue for {}: {}", key, sfe);
       }
 
       if (restrictStatus != null && !restrictStatus
@@ -675,6 +683,7 @@ public class Generator2 extends Configured implements Tool {
      * Limit the number of URLs per host/domain and assign segment number to
      * every record.
      */
+    @Override
     public void reduce(DomainScorePair key, Iterable<SelectorEntry> values,
         Context context) throws IOException, InterruptedException {
 
@@ -971,6 +980,7 @@ public class Generator2 extends Configured implements Tool {
 
     SegmenterKey outputKey = new SegmenterKey();
 
+    @Override
     public void map(FloatWritable key, SelectorEntry value, Context context)
         throws IOException, InterruptedException {
       outputKey.set(value.url, value.segnum);
@@ -996,6 +1006,7 @@ public class Generator2 extends Configured implements Tool {
       mos = new MultipleOutputs<Text, SelectorEntry>(context);
     }
 
+    @Override
     public void reduce(SegmenterKey key, Iterable<SelectorEntry> values,
         Context context) throws IOException, InterruptedException {
       long count = 0;
@@ -1058,6 +1069,7 @@ public class Generator2 extends Configured implements Tool {
       partitioner.setDomainLimits(SelectorReducer.readLimitsFile(conf, acceptor));
     }
 
+    @Override
     public void map(Text key, SelectorEntry value, Context context)
         throws IOException, InterruptedException {
       out.write("sequenceFilesPartitions", key, value.datum,
@@ -1084,6 +1096,7 @@ public class Generator2 extends Configured implements Tool {
       super(Text.class);
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public int compare(WritableComparable a, WritableComparable b) {
       Text url1 = (Text) a;
@@ -1093,6 +1106,7 @@ public class Generator2 extends Configured implements Tool {
       return (hash1 < hash2 ? -1 : (hash1 == hash2 ? 0 : 1));
     }
 
+    @Override
     public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
       int hash1 = hash(b1, s1, l1);
       int hash2 = hash(b2, s2, l2);
@@ -1104,7 +1118,7 @@ public class Generator2 extends Configured implements Tool {
       // make later bytes more significant in hash code, so that sorting
       // by hashcode correlates less with by-host ordering.
       for (int i = length - 1; i >= 0; i--)
-        hash = (31 * hash) + (int) bytes[start + i];
+        hash = (31 * hash) + bytes[start + i];
       return hash;
     }
   }
@@ -1341,9 +1355,7 @@ public class Generator2 extends Configured implements Tool {
    */
   private List<Path> partitionSegments(FileSystem fs, Path segmentsDir,
       List<Path> inputDirs, int numLists) throws Exception {
-    if (LOG.isInfoEnabled()) {
-      LOG.info("Generator: Partitioning selected urls for politeness.");
-    }
+    LOG.info("Generator: Partitioning selected urls for politeness.");
 
     List<Path> generatedSegments = new ArrayList<Path>();
 
@@ -1420,6 +1432,7 @@ public class Generator2 extends Configured implements Tool {
     System.exit(res);
   }
 
+  @Override
   public int run(String[] args) throws Exception {
     if (args.length < 2) {
       System.out.println(
