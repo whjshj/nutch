@@ -34,6 +34,8 @@ How to install additional requirements to build this fork of Nutch:
 Apache Nutch
 ============
 
+[![master pull request ci](https://github.com/apache/nutch/actions/workflows/master-build.yml/badge.svg)](https://github.com/apache/nutch/actions/workflows/master-build.yml)
+
 <img src="https://nutch.apache.org/assets/img/nutch_logo_tm.png" align="right" width="300" />
 
 For the latest information about Nutch, please visit the Nutch website at:
@@ -53,22 +55,21 @@ Contributing
 To contribute a patch, follow these instructions (note that installing
 [Hub](https://hub.github.com/) is not strictly required, but is recommended).
 
-```
 0. Download and install hub.github.com
 1. File JIRA issue for your fix at https://issues.apache.org/jira/projects/NUTCH/issues
-- you will get issue id NUTCH-xxx where xxx is the issue ID.
-2. git clone https://github.com/apache/nutch.git
-3. cd nutch
-4. git checkout -b NUTCH-xxx
+   - you will get issue id NUTCH-xxxx where xxxx is the issue ID.
+2. `git clone https://github.com/apache/nutch.git`
+3. `cd nutch`
+4. `git checkout -b NUTCH-xxxx`
 5. edit files (please try and include a test case if possible)
-6. git status (make sure it shows what files you expected to edit)
+6. `git status` (make sure it shows what files you expected to edit)
 7. Make sure that your code complies with the [Nutch codeformatting template](https://raw.githubusercontent.com/apache/nutch/master/eclipse-codeformat.xml), which is basially two space indents
-8. git add <files>
-9. git commit -m “fix for NUTCH-xxx contributed by <your username>”
-10. git fork
-11. git push -u <your git username> NUTCH-xxx
-12. git pull-request
-```
+8. `git add <files>`
+9. `git commit -m "fix for NUTCH-xxx contributed by <your username>"`
+10. `hub fork` (if hub is not installed, you can fork the project using the "fork" button on the [Nutch Github project page](https://github.com/apache/nutch))
+11. `git push -u <your git username> NUTCH-xxxx`
+12. `hub pull-request` (if hub is not installed, please follow the instructions how to [create a pull-request from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork))
+
 
 IDE setup
 =========
@@ -101,6 +102,7 @@ On the "Import Project" screen select the "Import project from external model" r
 Click "Create". On the next screen the "Eclipse projects directory" should be already set to the nutch folder.
 Leave the "Create module files near .classpath files" radio button selected.
 Click "Next" on the next screens. On the project SDK screen select Java 11 and click "Create".
+**N.B.** For anyone on a Mac with a homebrew-installed openjdk, you need to use the directory under _libexec_: `<openjdk11_directory>/libexec/openjdk.jdk/Contents/Home`.
 
 Once the project is imported, you will see a popup saying "Ant build scripts found", "Frameworks detected - IvyIDEA Framework detected". Click "Import".
 If you don't get the pop-up, I'd suggest going through the steps again as this happens from time to time. There is another
