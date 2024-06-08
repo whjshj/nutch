@@ -181,7 +181,7 @@ public class WarcWriter {
       extra.put(WARC_CONCURRENT_TO, "<" + relatedId.toString() + ">");
     }
     extra.put(WARC_IP_ADDRESS, ip);
-    extra.put(WARC_TARGET_URI, targetUri.toString());
+    extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
 
     if (payloadDigest != null) {
       extra.put(WARC_PAYLOAD_DIGEST, payloadDigest);
@@ -212,9 +212,9 @@ public class WarcWriter {
     extra.put(WARC_WARCINFO_ID, "<" + warcinfoId.toString() + ">");
     extra.put(WARC_REFERS_TO, "<" + relatedId.toString() + ">");
     extra.put(WARC_IP_ADDRESS, ip);
-    extra.put(WARC_TARGET_URI, targetUri.toString());
+    extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
     // WARC-Refers-To-Target-URI only useful for revisit by digest
-    extra.put(WARC_REFERS_TO_TARGET_URI, targetUri.toString());
+    extra.put(WARC_REFERS_TO_TARGET_URI, targetUri.toASCIIString());
     if (refersToDate != null) {
       extra.put(WARC_REFERS_TO_DATE, isoDate.format(refersToDate));
     }
@@ -238,7 +238,7 @@ public class WarcWriter {
     Map<String, String> extra = new LinkedHashMap<String, String>();
     extra.put(WARC_WARCINFO_ID, "<" + warcinfoId.toString() + ">");
     extra.put(WARC_CONCURRENT_TO, "<" + relatedId.toString() + ">");
-    extra.put(WARC_TARGET_URI, targetUri.toString());
+    extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
 
     if (blockDigest != null) {
       extra.put(WARC_BLOCK_DIGEST, blockDigest);
@@ -256,7 +256,7 @@ public class WarcWriter {
     Map<String, String> extra = new LinkedHashMap<String, String>();
     extra.put(WARC_WARCINFO_ID, "<" + warcinfoId.toString() + ">");
     extra.put(WARC_REFERS_TO, "<" + relatedId.toString() + ">");
-    extra.put(WARC_TARGET_URI, targetUri.toString());
+    extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
 
     if (blockDigest != null) {
       extra.put(WARC_BLOCK_DIGEST, blockDigest);
