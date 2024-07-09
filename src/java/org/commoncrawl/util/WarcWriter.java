@@ -20,22 +20,33 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.protocol.Content;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 
 public class WarcWriter {
+
+  private static final Logger LOG = LoggerFactory
+      .getLogger(MethodHandles.lookup().lookupClass());
+
   protected OutputStream out = null;
   protected OutputStream origOut = null;
 
@@ -68,6 +79,10 @@ public class WarcWriter {
   private static final String WARC_IDENTIFIED_PAYLOAD_TYPE = "WARC-Identified-Payload-Type";
   private static final String WARC_PROFILE = "WARC-Profile";
   private static final String WARC_FILENAME = "WARC-Filename";
+  /** WARC-Protocol, see https://github.com/iipc/warc-specifications/issues/42 */
+  private static final String WARC_PROTOCOL = "WARC-Protocol";
+  /** WARC-Cipher-Suite, see https://github.com/iipc/warc-specifications/issues/94 */
+  private static final String WARC_CIPHER_SUITE = "WARC-Cipher-Suite";
 
   public static final String PROFILE_REVISIT_IDENTICAL_DIGEST = "http://netpreserve.org/warc/1.1/revisit/identical-payload-digest";
   public static final String PROFILE_REVISIT_NOT_MODIFIED = "http://netpreserve.org/warc/1.1/revisit/server-not-modified";
@@ -99,6 +114,36 @@ public class WarcWriter {
   }
 
   /**
+   * Class to hold HTTP and SSL/TLS protocol versions to fill the
+   * <code>WARC-Protocol</code> field. Protocol names require normalization, see
+   * https://github.com/iipc/warc-specifications/issues/42
+   */
+  public static class WarcProtocol {
+    public static Set<String> protocols = Set.of("dns", "ftp", "gemini",
+        "gopher", "http/0.9", "http/1.0", "http/1.1", "h2", "h2c", "spdy/1",
+        "spdy/2", "spdy/3", "ssl/2", "ssl/3", "tls/1.0", "tls/1.1", "tls/1.2",
+        "tls/1.3");
+    public static Pattern vPattern = Pattern.compile("^(?:ssl|tls)v[0-9]",
+        Pattern.CASE_INSENSITIVE);
+    private String name;
+
+    public WarcProtocol(final String protocol) {
+      name = protocol.toLowerCase(Locale.ROOT);
+      if (vPattern.matcher(name).find()) {
+        name = name.substring(0, 3) + '/' + name.substring(4);
+      }
+      if (!protocols.contains(name)) {
+        LOG.warn("Unknown protocol name or version: {}", name);
+      }
+    }
+
+    @Override
+    public String toString() {
+      return name;
+    }
+  }
+
+  /**
    *
    * @return record id for the warcinfo record
    * @throws IOException
@@ -107,11 +152,11 @@ public class WarcWriter {
       String publisher, String operator, String software, String isPartOf,
       String description, Date date)
       throws IOException {
-    Map<String, String> extra = new LinkedHashMap<String, String>();
+    Multimap<String, String> extra = LinkedListMultimap.create();
     extra.put(WARC_FILENAME, filename);
 
     StringBuilder sb = new StringBuilder();
-    Map<String, String> settings = new LinkedHashMap<String, String>();
+    Multimap<String, String> settings = LinkedListMultimap.create();
 
     if (isPartOf != null) {
       settings.put("isPartOf", isPartOf);
@@ -157,12 +202,22 @@ public class WarcWriter {
   }
 
   public URI writeWarcRequestRecord(final URI targetUri, final String ip,
-      final Date date, final URI warcinfoId, final byte[] block)
-      throws IOException {
-    Map<String, String> extra = new LinkedHashMap<String, String>();
+      final Date date, final URI warcinfoId, String[] protocolVersions,
+      String[] cipherSuites, final byte[] block) throws IOException {
+    Multimap<String, String> extra = LinkedListMultimap.create();
     extra.put(WARC_WARCINFO_ID, "<" + warcinfoId.toString() + ">");
     extra.put(WARC_IP_ADDRESS, ip);
     extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
+    if (protocolVersions != null) {
+      for (String pVersion : protocolVersions) {
+        extra.put(WARC_PROTOCOL, new WarcProtocol(pVersion).toString());
+      }
+    }
+    if (cipherSuites != null) {
+      for (String cipher : cipherSuites) {
+        extra.put(WARC_CIPHER_SUITE, cipher);
+      }
+    }
 
     URI recordId = getRecordId();
     writeRecord(WARC_REQUEST, date, "application/http; msgtype=request",
@@ -173,15 +228,25 @@ public class WarcWriter {
   public URI writeWarcResponseRecord(final URI targetUri, final String ip,
       final int httpStatusCode, final Date date, final URI warcinfoId,
       final URI relatedId, final String payloadDigest, final String blockDigest,
-      final String truncated, final byte[] block, Content content)
-      throws IOException {
-    Map<String, String> extra = new LinkedHashMap<String, String>();
+      final String truncated, String[] protocolVersions, String[] cipherSuites,
+      final byte[] block, Content content) throws IOException {
+    Multimap<String, String> extra = LinkedListMultimap.create();
     extra.put(WARC_WARCINFO_ID, "<" + warcinfoId.toString() + ">");
     if (relatedId != null) {
       extra.put(WARC_CONCURRENT_TO, "<" + relatedId.toString() + ">");
     }
     extra.put(WARC_IP_ADDRESS, ip);
     extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
+    if (protocolVersions != null) {
+      for (String pVersion : protocolVersions) {
+        extra.put(WARC_PROTOCOL, new WarcProtocol(pVersion).toString());
+      }
+    }
+    if (cipherSuites != null) {
+      for (String cipher : cipherSuites) {
+        extra.put(WARC_CIPHER_SUITE, cipher);
+      }
+    }
 
     if (payloadDigest != null) {
       extra.put(WARC_PAYLOAD_DIGEST, payloadDigest);
@@ -206,13 +271,24 @@ public class WarcWriter {
   public URI writeWarcRevisitRecord(final URI targetUri, final String ip,
       final int httpStatusCode, final Date date, final URI warcinfoId,
       final URI relatedId, final String warcProfile, final Date refersToDate,
-      final String payloadDigest, final String blockDigest, byte[] block,
+      final String payloadDigest, final String blockDigest,
+      String[] protocolVersions, String[] cipherSuites, byte[] block,
       Content content) throws IOException {
-    Map<String, String> extra = new LinkedHashMap<String, String>();
+    Multimap<String, String> extra = LinkedListMultimap.create();
     extra.put(WARC_WARCINFO_ID, "<" + warcinfoId.toString() + ">");
     extra.put(WARC_REFERS_TO, "<" + relatedId.toString() + ">");
     extra.put(WARC_IP_ADDRESS, ip);
     extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
+    if (protocolVersions != null) {
+      for (String pVersion : protocolVersions) {
+        extra.put(WARC_PROTOCOL, new WarcProtocol(pVersion).toString());
+      }
+    }
+    if (cipherSuites != null) {
+      for (String cipher : cipherSuites) {
+        extra.put(WARC_CIPHER_SUITE, cipher);
+      }
+    }
     // WARC-Refers-To-Target-URI only useful for revisit by digest
     extra.put(WARC_REFERS_TO_TARGET_URI, targetUri.toASCIIString());
     if (refersToDate != null) {
@@ -235,7 +311,7 @@ public class WarcWriter {
   public URI writeWarcMetadataRecord(final URI targetUri, final Date date,
       final URI warcinfoId, final URI relatedId, final String blockDigest,
       final byte[] block) throws IOException {
-    Map<String, String> extra = new LinkedHashMap<String, String>();
+    Multimap<String, String> extra = LinkedListMultimap.create();
     extra.put(WARC_WARCINFO_ID, "<" + warcinfoId.toString() + ">");
     extra.put(WARC_CONCURRENT_TO, "<" + relatedId.toString() + ">");
     extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
@@ -253,7 +329,7 @@ public class WarcWriter {
   public URI writeWarcConversionRecord(final URI targetUri, final Date date,
       final URI warcinfoId, final URI relatedId, final String blockDigest,
       final String contentType, final byte[] block) throws IOException {
-    Map<String, String> extra = new LinkedHashMap<String, String>();
+    Multimap<String, String> extra = LinkedListMultimap.create();
     extra.put(WARC_WARCINFO_ID, "<" + warcinfoId.toString() + ">");
     extra.put(WARC_REFERS_TO, "<" + relatedId.toString() + ">");
     extra.put(WARC_TARGET_URI, targetUri.toASCIIString());
@@ -268,13 +344,14 @@ public class WarcWriter {
   }
 
   protected void writeRecord(final String type, final Date date,
-      final String contentType, final URI recordId, Map<String, String> extra,
-      final InputStream content, final long contentLength) throws IOException {
+      final String contentType, final URI recordId,
+      Multimap<String, String> extra, final InputStream content,
+      final long contentLength) throws IOException {
     StringBuilder sb = new StringBuilder(4096);
 
     sb.append(WARC_VERSION).append(CRLF);
 
-    Map<String, String> header = new LinkedHashMap<String, String>();
+    Multimap<String, String> header = LinkedListMultimap.create();
     header.put(WARC_TYPE, type);
     header.put(WARC_DATE, isoDate.format(date));
     header.put(WARC_RECORD_ID, "<" + recordId.toString() + ">");
@@ -298,13 +375,13 @@ public class WarcWriter {
   }
 
   protected void writeRecord(final String type, final Date date,
-      final String contentType, final URI recordId, Map<String, String> extra,
-      final byte[] block) throws IOException {
+      final String contentType, final URI recordId,
+      Multimap<String, String> extra, final byte[] block) throws IOException {
     StringBuilder sb = new StringBuilder(4096);
 
     sb.append(WARC_VERSION).append(CRLF);
 
-    Map<String, String> header = new LinkedHashMap<String, String>();
+    Multimap<String, String> header = LinkedListMultimap.create();
     header.put(WARC_TYPE, type);
     header.put(WARC_DATE, isoDate.format(date));
     header.put(WARC_RECORD_ID, "<" + recordId.toString() + ">");
@@ -359,14 +436,23 @@ public class WarcWriter {
     return count;
   }
 
-  protected void writeWarcKeyValue(StringBuilder sb,
+  protected static void writeWarcKeyValue(StringBuilder sb,
       Map<String, String> headers) {
     if (headers != null) {
-      for (Map.Entry<String, String> entry : headers.entrySet()) {
-        sb.append(entry.getKey()).append(COLONSP).append(entry.getValue())
-            .append(CRLF);
-      }
+      headers.forEach((k, v) -> writeWarcKeyValue(sb, k, v));
     }
+  }
+
+  protected static void writeWarcKeyValue(StringBuilder sb,
+      Multimap<String, String> headers) {
+    if (headers != null) {
+      headers.forEach((k, v) -> writeWarcKeyValue(sb, k, v));
+    }
+  }
+
+  protected static void writeWarcKeyValue(StringBuilder sb, String key,
+      String value) {
+    sb.append(key).append(COLONSP).append(value).append(CRLF);
   }
 
   private String getUUID() {
