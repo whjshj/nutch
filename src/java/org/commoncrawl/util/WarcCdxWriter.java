@@ -98,12 +98,13 @@ public class WarcCdxWriter extends WarcWriter {
   public URI writeWarcRevisitRecord(final URI targetUri, final String ip,
       final int httpStatusCode, final Date date, final URI warcinfoId,
       final URI relatedId, final String warcProfile, final Date refersToDate,
-      final String payloadDigest, final String blockDigest, byte[] block,
+      final String payloadDigest, final String blockDigest,
+      String[] protocolVersions, String[] cipherSuites, byte[] block,
       Content content) throws IOException {
     long offset = countingOut.getByteCount();
     URI recordId = super.writeWarcRevisitRecord(targetUri, ip, httpStatusCode,
         date, warcinfoId, relatedId, warcProfile, refersToDate, payloadDigest,
-        blockDigest, block, content);
+        blockDigest, protocolVersions, cipherSuites, block, content);
     long length = (countingOut.getByteCount() - offset);
     writeCdxLine(targetUri, date, offset, length, payloadDigest, content, true,
         null, null);
@@ -114,12 +115,12 @@ public class WarcCdxWriter extends WarcWriter {
   public URI writeWarcResponseRecord(final URI targetUri, final String ip,
       final int httpStatusCode, final Date date, final URI warcinfoId,
       final URI relatedId, final String payloadDigest, final String blockDigest,
-      final String truncated, final byte[] block, Content content)
-      throws IOException {
+      final String truncated, String[] protocolVersions, String[] cipherSuites,
+      final byte[] block, Content content)      throws IOException {
     long offset = countingOut.getByteCount();
     URI recordId = super.writeWarcResponseRecord(targetUri, ip, httpStatusCode,
         date, warcinfoId, relatedId, payloadDigest, blockDigest, truncated,
-        block, content);
+        protocolVersions, cipherSuites, block, content);
     long length = (countingOut.getByteCount() - offset);
     String redirectLocation = null;
     if (isRedirect(httpStatusCode)) {

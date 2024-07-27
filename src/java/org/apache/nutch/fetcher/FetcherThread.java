@@ -45,6 +45,7 @@ import org.apache.nutch.net.URLFilterException;
 import org.apache.nutch.net.URLFilters;
 import org.apache.nutch.net.URLNormalizers;
 import org.apache.nutch.net.protocols.ProtocolLogUtil;
+import org.apache.nutch.net.protocols.Response;
 import org.apache.nutch.parse.Outlink;
 import org.apache.nutch.parse.Parse;
 import org.apache.nutch.parse.ParseData;
@@ -136,6 +137,7 @@ public class FetcherThread extends Thread {
   private boolean storingContent;
   private boolean storingWarc;
   private boolean storing404s;
+  private boolean storingProtocolVersions;
 
   private boolean signatureWithoutParsing;
 
@@ -195,6 +197,8 @@ public class FetcherThread extends Thread {
     this.storingContent = storingContent;
     this.storing404s = conf.getBoolean("fetcher.store.404s", false);
     this.storingWarc = Fetcher.isStoringWarc(conf);
+    this.storingProtocolVersions = conf.getBoolean("store.protocol.versions",
+        false);
     this.pages = pages;
     this.bytes = bytes;
 
@@ -427,6 +431,10 @@ public class FetcherThread extends Thread {
               publisher.publish(endEvent, conf);
             }
             context.getCounter("FetcherStatus", status.getName()).increment(1);
+
+            if (storingProtocolVersions && content != null) {
+              countProtocolVersions(content.getMetadata());
+            }
 
             switch (status.getCode()) {
 
@@ -682,6 +690,24 @@ public class FetcherThread extends Thread {
           Thread.currentThread().getId(), url, message);
     }
     errors.incrementAndGet();
+  }
+
+  private void countProtocolVersions(Metadata contentMetadata) {
+    if (contentMetadata == null) {
+      return;
+    }
+    String versionStr = contentMetadata.get(Response.PROTOCOL_VERSIONS);
+    if (versionStr != null) {
+      String[] versions = versionStr.split(",");
+      if (versions.length >= 1) {
+        context.getCounter("HttpProtocolVersion", versions[0]).increment(1);
+      } else {
+        context.getCounter("HttpProtocolVersion", "unknown").increment(1);
+      }
+      for (int i = 1; i < versions.length; i++) {
+        context.getCounter("TlsProtocolVersion", versions[i]).increment(1);
+      }
+    }
   }
 
   private ParseStatus output(Text key, CrawlDatum datum, Content content,
