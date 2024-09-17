@@ -16,6 +16,8 @@
  */
 package org.apache.nutch.fetcher;
 
+import java.net.MalformedURLException;
+
 import org.apache.hadoop.io.Text;
 import org.apache.nutch.parse.Outlink;
 
@@ -33,6 +35,17 @@ public class FetchNode {
     this.url = url;
   }
   public Outlink[] getOutlinks() {
+    Outlink[] copyOutlinks = new Outlink[outlinks.length];
+    for (int i = copyOutlinks.length-1; i>=0; i--) {
+      Outlink o = outlinks[i];
+      if (o != null) {
+        try {
+          copyOutlinks[i] = new Outlink(o.getToUrl(), o.getAnchor());
+        } catch (MalformedURLException e) {
+          // ignore
+        }
+      }
+    }
     return outlinks;
   }
   public void setOutlinks(Outlink[] links) {
