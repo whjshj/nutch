@@ -358,7 +358,7 @@ public abstract class HttpBase implements Protocol {
       URL u = new URL(urlString);
 
       long startTime = System.currentTimeMillis();
-      Response response = getResponse(u, datum, false); // make a request
+      Response response = getResponse(u, datum, true); // make a request
 
       if (this.responseTime) {
         int elapsedTime = (int) (System.currentTimeMillis() - startTime);
@@ -427,7 +427,18 @@ public abstract class HttpBase implements Protocol {
       } else if (code == 410) { // permanently GONE
         return new ProtocolOutput(c, new ProtocolStatus(ProtocolStatus.GONE,
             "Http: " + code + " url=" + u));
-      } else {
+      } else if (code == 403) {
+        return new ProtocolOutput(c, new ProtocolStatus(ProtocolStatus.IP_FOLD, u));
+      }
+      else if (code > 400 && code < 500) {
+        return new ProtocolOutput(c, new ProtocolStatus(
+                ProtocolStatus.CLIENT_ERROR, "Http code=" + code + ", url=" + u));
+      }
+        else if (code >= 500) {
+        return new ProtocolOutput(c, new ProtocolStatus(
+                ProtocolStatus.SEVERE_ERROR, "Http code=" + code + ", url=" + u));
+        }
+      else {
         return new ProtocolOutput(c, new ProtocolStatus(
             ProtocolStatus.EXCEPTION, "Http code=" + code + ", url=" + u));
       }
@@ -438,7 +449,8 @@ public abstract class HttpBase implements Protocol {
         this.logger.error("Failed to get protocol output: {}",
             e.getClass().getName());
       }
-      return new ProtocolOutput(null, new ProtocolStatus(e));
+      return new ProtocolOutput(null, new ProtocolStatus(
+              ProtocolStatus.RUNTIME_ERROR, e.getMessage()));
     }
   }
 

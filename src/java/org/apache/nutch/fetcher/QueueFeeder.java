@@ -169,6 +169,11 @@ public class QueueFeeder extends Thread {
     queues.feederAlive = false;
     LOG.info("QueueFeeder finished: total {} records", cnt);
     LOG.info("QueueFeeder queuing status:");
+    context.getCounter("FetcherStatus", "originUrlNumber").setValue(cnt);
+    for (QueuingStatus status : QueuingStatus.values()) {
+      context.getCounter("FetcherStatus", "originUrlNumber").setValue(cnt);
+      context.getCounter("FetcherStatus", "feeder" + status.name()).setValue(queuingStatus[status.ordinal()]);
+    }
     for (QueuingStatus status : QueuingStatus.values()) {
       LOG.info("\t{}\t{}", queuingStatus[status.ordinal()], status);
     }

@@ -121,12 +121,14 @@ public class FetchItemQueue {
   }
 
   public FetchItem getFetchItem() {
-    if (inProgress.get() >= maxThreads)
+    if (inProgress.get() >= maxThreads) {
       return null;
+    }
     long now = System.currentTimeMillis();
-    if (nextFetchTime.get() > now)
+    if (nextFetchTime.get() > now){
       return null;
-    FetchItem it = null;
+    }
+     FetchItem it = null;
     if (queue.size() == 0)
       return null;
     try {

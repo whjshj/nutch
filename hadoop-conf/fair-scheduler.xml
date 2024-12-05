@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<allocations>
+    <queue name="root">
+        <minResources>10000 mb,10 vcores</minResources>
+        <maxRunningApps>50</maxRunningApps>
+        <maxAMShare>0.5f</maxAMShare>
+        <weight>2.0</weight>
+        <schedulingPolicy>fair</schedulingPolicy>
+        <aclSubmitApps>*</aclSubmitApps>
+        <aclAdministerApps>*</aclAdministerApps>
+        <allowPreemptionFrom>true</allowPreemptionFrom>
+        <queue name="default">
+            <aclSubmitApps>*</aclSubmitApps>
+            <minResources>10000 mb,10vcores</minResources>
+        </queue>
+    </queue>
+    <userMaxAppsDefault>50</userMaxAppsDefault>
+    <queueMaxAMShareDefault>0.5</queueMaxAMShareDefault>
+    <queueMaxAppsDefault>50</queueMaxAppsDefault>
+    <defaultQueueSchedulingPolicy>fair</defaultQueueSchedulingPolicy>
+</allocations>
+

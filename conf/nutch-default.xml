@@ -1056,7 +1056,7 @@
 
 <property>
   <name>fetcher.server.delay</name>
-  <value>5.0</value>
+  <value>3.0</value>
   <description>The number of seconds the fetcher will delay between
    successive requests to the same server. Note that this might get
    overridden by a Crawl-Delay from a robots.txt and is used ONLY if
@@ -1119,7 +1119,7 @@
 
 <property>
   <name>fetcher.threads.per.queue</name>
-  <value>1</value>
+  <value>5</value>
   <description>This number is the maximum number of threads that
     should be allowed to access a queue at one time. Setting it to
     a value > 1 will cause the Crawl-Delay value from robots.txt to
@@ -1187,7 +1187,7 @@
 
 <property>
   <name>fetcher.max.exceptions.per.queue</name>
-  <value>-1</value>
+  <value>10</value>
   <description>The maximum number of protocol-level exceptions
   (e.g. timeouts) or HTTP status codes mapped to ProtocolStatus.EXCEPTION
   per host (or IP) queue. Once this value is reached, any remaining entries
@@ -1262,7 +1262,7 @@
 
 <property>
   <name>fetcher.queue.depth.multiplier</name>
-  <value>50</value>
+  <value>200</value>
   <description>(EXPERT)The fetcher buffers the incoming URLs into queues based on the [host|domain|IP]
   (see param fetcher.queue.mode). The depth of the queue is the number of threads times the value of this parameter.
   A large value requires more memory but can improve the performance of the fetch when the order of the URLs in the fetch list

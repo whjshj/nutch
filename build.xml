@@ -49,8 +49,8 @@
   <property name="apache-rat.jar" value="${apache-rat.home}/apache-rat-${apache-rat.version}.jar" />
 
   <condition property="using.jdk.11">
-    <matches string="${java.version}" pattern="11.+" casesensitive="false" />
-  </condition>
+    <matches string="${java.version}" pattern="1\\.8\\.+" casesensitive="false" />
+</condition>
 
   <!-- the normal classpath -->
   <path id="classpath">
@@ -126,8 +126,8 @@
      destdir="${build.classes}"
      debug="${javac.debug}"
      optimize="${javac.optimize}"
-     target="${javac.version}"
-     source="${javac.version}"
+     target="8"
+     source="8"
      deprecation="${javac.deprecation}">
       <compilerarg value="-Xlint:-path"/>
       <classpath refid="classpath"/>
@@ -403,7 +403,8 @@
       <zipfileset dir="${conf.dir}" excludes="*.template,hadoop*.*"/>
       <zipfileset dir="${build.lib.dir}" prefix="lib"
                   includes="**/*.jar" excludes="hadoop-*.jar,slf4j*.jar,log4j*.jar"/>
-      <zipfileset dir="${build.plugins}" prefix="classes/plugins"/>
+	  <zipfileset dir="${build.plugins}" prefix="classes/plugins"/>
+	  <zipfileset dir="native" prefix="classes" includes="*.so"/>
     </jar>
   </target>
 

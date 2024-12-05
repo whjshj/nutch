@@ -834,6 +834,9 @@ public class Generator2 extends Configured implements Tool {
             "Domain {} has more than {} hosts, skipped {} URLs from remaining hosts",
             key.getDomain(), maxHosts, maxHostsOverflowCount);
       }
+      if (hosts==null) {
+	  hosts = new HashMap<>();
+      }
 
       // log metrics per host/domain
       LOG.info(
@@ -1281,6 +1284,7 @@ public class Generator2 extends Configured implements Tool {
       job.setMapOutputValueClass(SelectorEntry.class);
       job.setOutputKeyClass(Text.class);
       job.setOutputValueClass(SelectorEntry.class);
+      conf.set("mapreduce.reduce.memory.mb", "10000");
 
       stage2Dir = tempDir.suffix("/stage2");
       FileOutputFormat.setOutputPath(job, stage2Dir);

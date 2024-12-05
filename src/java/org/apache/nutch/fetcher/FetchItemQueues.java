@@ -342,6 +342,7 @@ public class FetchItemQueues {
       if (excCount > 1) {
         // double the initial delay with every observed exception
         exceptionDelay *= 2L << Math.min((excCount - 2), 31);
+        exceptionDelay = Math.min(exceptionDelay, 10 * 1000);
       }
       nexFetchTime = fiq.nextFetchTime.addAndGet(exceptionDelay);
       LOG.info(

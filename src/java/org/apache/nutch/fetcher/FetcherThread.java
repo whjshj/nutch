@@ -455,8 +455,7 @@ public class FetcherThread extends Thread {
               }
               break;
 
-            case ProtocolStatus.MOVED: // redirect
-            case ProtocolStatus.TEMP_MOVED:
+            case ProtocolStatus.MOVED:
               int code;
               boolean temp;
               if (status.getCode() == ProtocolStatus.MOVED) {
@@ -469,15 +468,37 @@ public class FetcherThread extends Thread {
               output(fit.url, fit.datum, content, status, code);
               String newUrl = status.getMessage();
               Text redirUrl = handleRedirect(fit, newUrl, temp,
-                  Fetcher.PROTOCOL_REDIR);
+                      Fetcher.PROTOCOL_REDIR);
               if (redirUrl != null) {
                 fit = queueRedirect(redirUrl, fit);
               } else {
                 // stop redirecting
                 redirecting = false;
               }
+              break;// redirect
+            case ProtocolStatus.TEMP_MOVED:
+              int codeTemp;
+              boolean tempTemp;
+              if (status.getCode() == ProtocolStatus.MOVED) {
+                codeTemp = CrawlDatum.STATUS_FETCH_REDIR_PERM;
+                tempTemp = false;
+              } else {
+                codeTemp = CrawlDatum.STATUS_FETCH_REDIR_TEMP;
+                tempTemp = true;
+              }
+              output(fit.url, fit.datum, content, status, codeTemp);
+              String newUrlTemp = status.getMessage();
+              Text redirUrlTemp = handleRedirect(fit, newUrlTemp, tempTemp,
+                  Fetcher.PROTOCOL_REDIR);
+              if (redirUrlTemp != null) {
+                fit = queueRedirect(redirUrlTemp, fit);
+              } else {
+                // stop redirecting
+                redirecting = false;
+              }
               break;
-
+            case ProtocolStatus.IP_FOLD:
+                context.getCounter("FetcherStatus", "IP_FOLD").increment(1);
             case ProtocolStatus.EXCEPTION:
               logError(fit.url, status.getMessage());
               int killedURLs = fetchQueues
@@ -494,6 +515,7 @@ public class FetcherThread extends Thread {
 
             case ProtocolStatus.GONE: // gone
             case ProtocolStatus.NOTFOUND:
+                 logError(fit.url, "url is not found");
             case ProtocolStatus.ACCESS_DENIED:
             case ProtocolStatus.ROBOTS_DENIED:
               output(fit.url, fit.datum, (storing404s ? content : null), status,

@@ -45,7 +45,7 @@ import com.google.common.collect.Multimap;
 public class WarcWriter {
 
   private static final Logger LOG = LoggerFactory
-      .getLogger(MethodHandles.lookup().lookupClass());
+          .getLogger(MethodHandles.lookup().lookupClass());;
 
   protected OutputStream out = null;
   protected OutputStream origOut = null;
@@ -120,9 +120,10 @@ public class WarcWriter {
    */
   public static class WarcProtocol {
     public static Set<String> protocols = Set.of("dns", "ftp", "gemini",
-        "gopher", "http/0.9", "http/1.0", "http/1.1", "h2", "h2c", "spdy/1",
-        "spdy/2", "spdy/3", "ssl/2", "ssl/3", "tls/1.0", "tls/1.1", "tls/1.2",
-        "tls/1.3");
+            "gopher", "http/0.9", "http/1.0", "http/1.1", "h2", "h2c", "spdy/1",
+            "spdy/2", "spdy/3", "ssl/2", "ssl/3", "tls/1.0", "tls/1.1", "tls/1.2",
+            "tls/1.3");
+
     public static Pattern vPattern = Pattern.compile("^(?:ssl|tls)v[0-9]",
         Pattern.CASE_INSENSITIVE);
     private String name;
@@ -446,7 +447,9 @@ public class WarcWriter {
   protected static void writeWarcKeyValue(StringBuilder sb,
       Multimap<String, String> headers) {
     if (headers != null) {
-      headers.forEach((k, v) -> writeWarcKeyValue(sb, k, v));
+      headers.asMap().forEach((k, values) -> {
+            values.forEach(v -> writeWarcKeyValue(sb, k, v));
+        });
     }
   }
 

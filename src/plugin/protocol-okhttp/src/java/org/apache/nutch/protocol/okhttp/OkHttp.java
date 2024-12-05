@@ -110,7 +110,7 @@ public class OkHttp extends HttpBase {
     okhttp3.OkHttpClient.Builder builder = new OkHttpClient.Builder()
         .protocols(protocols) //
         .retryOnConnectionFailure(true) //
-        .followRedirects(false) //
+        .followRedirects(true) //
         .connectTimeout(this.timeout, TimeUnit.MILLISECONDS)
         .writeTimeout(this.timeout, TimeUnit.MILLISECONDS)
         .readTimeout(this.timeout, TimeUnit.MILLISECONDS);

@@ -63,6 +63,7 @@ public class ProtocolStatus implements Writable {
   public static final int NOTFETCHING = 20;
   /** Unchanged since the last fetch. */
   public static final int NOTMODIFIED = 21;
+  public static final int IP_FOLD = 25;
   /**
    * Request was refused by protocol plugins, because it would block. The
    * expected number of milliseconds to wait before retry may be provided in
@@ -73,7 +74,11 @@ public class ProtocolStatus implements Writable {
   /** Thread was blocked http.max.delays times during fetching. */
   @Deprecated
   public static final int BLOCKED = 23;
+  public static final int RUNTIME_ERROR= 26;
 
+  public static final int SEVERE_ERROR = 27;
+
+  public static final int CLIENT_ERROR = 28;
   // Useful static instances for status codes that don't usually require any
   // additional arguments.
   public static final ProtocolStatus STATUS_SUCCESS = new ProtocolStatus(
@@ -95,6 +100,7 @@ public class ProtocolStatus implements Writable {
       WOULDBLOCK);
   public static final ProtocolStatus STATUS_BLOCKED = new ProtocolStatus(
       BLOCKED);
+  public static final ProtocolStatus STATUS_IP_FOLD = new ProtocolStatus(IP_FOLD);
 
   private int code;
   private long lastModified;
@@ -118,6 +124,10 @@ public class ProtocolStatus implements Writable {
     codeToName.put(Integer.valueOf(NOTMODIFIED), "notmodified");
     codeToName.put(Integer.valueOf(WOULDBLOCK), "wouldblock");
     codeToName.put(Integer.valueOf(BLOCKED), "blocked");
+    codeToName.put(Integer.valueOf(RUNTIME_ERROR), "runtime_error");
+    codeToName.put(Integer.valueOf(SEVERE_ERROR), "severe_error");
+    codeToName.put(Integer.valueOf(CLIENT_ERROR), "client_error");
+    codeToName.put(Integer.valueOf(IP_FOLD), "ip_fold");
   }
 
   public ProtocolStatus() {
@@ -153,7 +163,6 @@ public class ProtocolStatus implements Writable {
     if (message != null)
       this.args = new String[] { String.valueOf(message) };
   }
-
   public ProtocolStatus(Throwable t) {
     this(EXCEPTION, t);
   }

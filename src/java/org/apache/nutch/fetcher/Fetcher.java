@@ -242,6 +242,8 @@ public class Fetcher extends NutchTool implements Tool {
         long timeout = conf.getInt("mapreduce.task.timeout", 10 * 60 * 1000)
             / timeoutDivisor;
 
+        timeout = timeout/3;
+
         // Used for threshold check, holds pages and bytes processed in the last
         // second
         int pagesLastSec;
@@ -550,7 +552,6 @@ public class Fetcher extends NutchTool implements Tool {
     job.setOutputFormatClass(FetcherOutputFormat.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(NutchWritable.class);
-
     try {
       boolean success = job.waitForCompletion(true);
       if (!success) {
